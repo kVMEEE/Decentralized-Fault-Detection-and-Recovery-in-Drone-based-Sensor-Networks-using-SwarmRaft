@@ -1,0 +1,5 @@
+# Core AI and Math Dependencies for Distributed Agents Master Prompt
+matplotlib
+numpy
+gymnasium
+stable-baselines3
