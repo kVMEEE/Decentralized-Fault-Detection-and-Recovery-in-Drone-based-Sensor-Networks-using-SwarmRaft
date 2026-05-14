@@ -1,5 +1,6 @@
 
-# SwarmRaft: Robust Drone Swarm Coordination
+# DECENTRALIZED FAULT DETECTION AND RECOVERY IN DRONE-BASED SENSOR NETWORKS USING SWARMRAFT
+
 
 ## 🚁 Project Overview
 
