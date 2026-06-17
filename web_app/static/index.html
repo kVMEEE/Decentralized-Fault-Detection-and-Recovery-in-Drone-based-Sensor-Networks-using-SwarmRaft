@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwarmRaft - Live Web Demo</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <!-- Tailwind CSS for UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0a0e1a; color: white; font-family: monospace; }
+        .panel { background-color: rgba(15, 23, 42, 0.9); border: 1px solid #334155; }
+        #plot { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 0; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; }
+        .pointer-events-auto { pointer-events: auto; }
+    </style>
+</head>
+<body>
+
+    <div id="plot"></div>
+
+    <div id="ui-layer">
+        <!-- Top row: Title and Phase -->
+        <div class="flex justify-between items-start w-full">
+            <div>
+                <h1 class="text-2xl font-bold mb-2">SwarmRaft -- Web Demo</h1>
+                <p class="text-gray-400 text-sm">RL Active Defense Simulation</p>
+            </div>
+            <div class="text-center">
+                <h2 id="phase-display" class="text-xl font-bold text-green-500">CONNECTING...</h2>
+            </div>
+            
+            <!-- HUD -->
+            <div class="panel rounded p-4 text-sm pointer-events-auto min-w-[250px]">
+                <div class="flex justify-between mb-1"><span class="text-gray-400">Formation:</span> <span id="hud-formation">--</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-400">Failure Mode:</span> <span id="hud-mode">--</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-400">Active Drones:</span> <span id="hud-active">--/--</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-400">Leader:</span> <span id="hud-leader">--</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-400">GDOP:</span> <span id="hud-gdop">--</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-400">Coverage:</span> <span id="hud-coverage">--%</span></div>
+                <div class="flex justify-between mt-3 pt-2 border-t border-slate-700 text-xs"><span class="text-gray-500">Frame:</span> <span id="hud-frame">--/--</span></div>
+            </div>
+        </div>
+
+        <!-- Bottom row: Logs and Controls -->
+        <div class="flex justify-between items-end w-full">
+            <div id="logs-display" class="panel rounded p-3 text-xs text-slate-400 w-[400px] h-[120px] overflow-hidden flex flex-col justify-end">
+                <!-- Logs injected here -->
+            </div>
+            
+            <div class="panel rounded p-3 text-sm pointer-events-auto">
+                <button id="restart-btn" class="bg-blue-600 hover:bg-blue-500 text-white py-1 px-4 rounded font-bold transition">Restart Simulation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Overlay -->
+    <div id="complete-overlay" class="absolute inset-0 bg-black/60 z-50 flex items-center justify-center hidden pointer-events-none">
+        <h1 class="text-4xl font-bold text-green-500 tracking-widest bg-slate-900/90 p-8 rounded border border-green-900 shadow-[0_0_30px_rgba(34,197,94,0.3)]">SIMULATION COMPLETE</h1>
+    </div>
+
+    <script>
+        const plotDiv = document.getElementById('plot');
+        
+        // Colors & Markers
+        const STATE_STYLE = {
+            "honest":        { color: "#22c55e", marker: "circle", size: 10 },
+            "faulting":      { color: "#f97316", marker: "circle", size: 10 },
+            "failed":        { color: "#374151", marker: "x",      size: 12 },
+            "repositioning": { color: "#38bdf8", marker: "circle", size: 10 }
+        };
+
+        // Initialize empty plot
+        const layout = {
+            paper_bgcolor: '#0a0e1a',
+            plot_bgcolor: '#0a0e1a',
+            margin: { l: 0, r: 0, b: 0, t: 0 },
+            scene: {
+                xaxis: { title: 'X (m)', range: [10, 90], gridcolor: '#1e293b', backgroundcolor: '#0a0e1a', showbackground: true, color: '#475569' },
+                yaxis: { title: 'Y (m)', range: [10, 90], gridcolor: '#1e293b', backgroundcolor: '#0a0e1a', showbackground: true, color: '#475569' },
+                zaxis: { title: 'Z (m)', range: [0, 52],  gridcolor: '#1e293b', backgroundcolor: '#0a0e1a', showbackground: true, color: '#475569' },
+                camera: { eye: { x: 1.5, y: -1.5, z: 0.8 } },
+                aspectmode: 'cube'
+            },
+            showlegend: false
+        };
+
+        Plotly.newPlot(plotDiv, [], layout, {displayModeBar: false, responsive: true});
+
+        let ws = null;
+
+        function connectWebSocket() {
+            // Determine ws:// or wss:// based on current protocol
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.status === "complete") {
+                    document.getElementById('complete-overlay').classList.remove('hidden');
+                    return;
+                }
+                
+                updateUI(data);
+                renderPlot(data);
+            };
+
+            ws.onclose = function() {
+                console.log("WebSocket disconnected.");
+                document.getElementById('phase-display').innerText = "DISCONNECTED";
+                document.getElementById('phase-display').className = "text-xl font-bold text-red-500";
+            };
+        }
+
+        function updateUI(data) {
+            document.getElementById('complete-overlay').classList.add('hidden');
+            
+            // Phase styling
+            const phaseEl = document.getElementById('phase-display');
+            phaseEl.innerText = data.phase;
+            if (data.phase.includes("ACTIVE")) phaseEl.className = "text-xl font-bold text-green-500";
+            else if (data.phase.includes("FAILURE")) phaseEl.className = "text-xl font-bold text-red-500";
+            else phaseEl.className = "text-xl font-bold text-sky-400";
+
+            // HUD
+            document.getElementById('hud-formation').innerText = data.metrics.formation;
+            document.getElementById('hud-mode').innerText = data.metrics.failure_mode;
+            document.getElementById('hud-active').innerText = `${data.metrics.alive}/${data.metrics.total}`;
+            
+            // Find leader
+            const leader = data.drones.find(d => d.is_leader);
+            document.getElementById('hud-leader').innerText = leader ? `Drone ${leader.id}` : '--';
+            
+            document.getElementById('hud-gdop').innerText = data.metrics.gdop.toFixed(2);
+            document.getElementById('hud-coverage').innerText = `${data.metrics.coverage}%`;
+            document.getElementById('hud-frame').innerText = `${data.frame}/${data.total_frames}`;
+
+            // Logs
+            const logsHtml = data.logs.map(log => `<div>${log}</div>`).join('');
+            document.getElementById('logs-display').innerHTML = logsHtml;
+        }
+
+        function renderPlot(data) {
+            const traces = [];
+
+            // 1. Plot the Asset
+            traces.push({
+                x: [data.asset_pos[0]], y: [data.asset_pos[1]], z: [data.asset_pos[2]],
+                mode: 'markers+text',
+                marker: { color: '#fbbf24', symbol: 'diamond', size: 15, line: {color: 'white', width: 2} },
+                text: ['ASSET'],
+                textposition: 'top center',
+                textfont: { color: '#fbbf24', size: 10, family: 'monospace' },
+                type: 'scatter3d',
+                hoverinfo: 'none'
+            });
+
+            // 2. Mesh lines (Connect all alive drones)
+            const aliveDrones = data.drones.filter(d => d.state !== "failed");
+            for (let i = 0; i < aliveDrones.length; i++) {
+                for (let j = i + 1; j < aliveDrones.length; j++) {
+                    traces.push({
+                        x: [aliveDrones[i].pos[0], aliveDrones[j].pos[0]],
+                        y: [aliveDrones[i].pos[1], aliveDrones[j].pos[1]],
+                        z: [aliveDrones[i].pos[2], aliveDrones[j].pos[2]],
+                        mode: 'lines',
+                        line: { color: '#1e3a5f', width: 1 },
+                        opacity: 0.3,
+                        type: 'scatter3d',
+                        hoverinfo: 'none'
+                    });
+                }
+            }
+
+            // 3. Target Reorg Slots (if active)
+            if (data.target_slots && data.target_slots.length > 0) {
+                // Draw target slots outline loosely
+                const sx = data.target_slots.map(s => s[0]);
+                const sy = data.target_slots.map(s => s[1]);
+                const sz = data.target_slots.map(s => s[2]);
+                sx.push(sx[0]); sy.push(sy[0]); sz.push(sz[0]); // close loop
+                traces.push({
+                    x: sx, y: sy, z: sz,
+                    mode: 'lines',
+                    line: { color: '#38bdf8', width: 2, dash: 'dash' },
+                    opacity: 0.3,
+                    type: 'scatter3d',
+                    hoverinfo: 'none'
+                });
+            }
+
+            // 4. Drones
+            data.drones.forEach(d => {
+                const style = STATE_STYLE[d.state];
+                const label = d.is_leader ? `D${d.id}[L]` : `D${d.id}${d.state==='failed'?'[FAIL]':''}`;
+                
+                traces.push({
+                    x: [d.pos[0]], y: [d.pos[1]], z: [d.pos[2]],
+                    mode: 'markers+text',
+                    marker: { 
+                        color: style.color, 
+                        symbol: style.marker, 
+                        size: style.size,
+                        line: d.state === 'failed' ? undefined : {color: 'white', width: 1},
+                        opacity: d.state === 'failed' ? 0.5 : 0.9
+                    },
+                    text: [label],
+                    textposition: 'top center',
+                    textfont: { color: style.color, size: 10, family: 'monospace' },
+                    type: 'scatter3d',
+                    name: label
+                });
+            });
+
+            // Use Plotly.react for fast updates without recreating the scene
+            Plotly.react(plotDiv, traces, layout);
+        }
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            if (ws) ws.close();
+            // Clear plot instantly
+            Plotly.react(plotDiv, [], layout);
+            document.getElementById('complete-overlay').classList.add('hidden');
+            // Reconnect
+            setTimeout(connectWebSocket, 100);
+        });
+
+        // Start connection
+        connectWebSocket();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            Plotly.Plots.resize(plotDiv);
+        });
+    </script>
+</body>
+</html>
