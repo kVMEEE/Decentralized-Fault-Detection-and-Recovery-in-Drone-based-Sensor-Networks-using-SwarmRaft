@@ -1,6 +1,6 @@
 # DECENTRALIZED FAULT DETECTION AND RECOVERY IN DRONE-BASED SENSOR NETWORKS USING SWARMRAFT
 
-## 🚁 Project Overview
+##  Project Overview
 
 SwarmRaft is a decentralized UAV swarm coordination framework designed to maintain accurate positioning, fault tolerance, and operational continuity in GPS-denied or adversarial environments.
 
@@ -10,40 +10,40 @@ The framework enables drones to collaboratively identify malicious nodes, recove
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-### 🗳️ Decentralized Consensus & Fault Detection
+###  Decentralized Consensus & Fault Detection
 
 * Implements a Raft-inspired consensus mechanism for leader election and distributed decision-making.
 * Detects malicious or spoofed drones through collective voting and consistency verification.
 * Maintains fault tolerance using a Byzantine-inspired voting strategy requiring honest-majority validation.
 
-### 📍 Position Recovery & Localization
+###  Position Recovery & Localization
 
 * Recovers corrupted drone positions using iterative multilateration based on neighboring drone distances.
 * Supports dead-reckoning fallback when insufficient neighboring drones are available.
 * Accurately reconstructs positions even under GPS spoofing and ranging attacks.
 
-### 🤖 AI-Driven Formation Optimization
+###  AI-Driven Formation Optimization
 
 * Trains a Reinforcement Learning agent to optimize swarm formations.
 * Uses Geometric Dilution of Precision (GDOP) as the primary optimization metric.
 * Learns drone placement strategies that maximize localization accuracy while minimizing repositioning costs.
 * Trained over 15,000 simulation episodes using reward-based optimization.
 
-### 🔄 Autonomous Failure Recovery
+###  Autonomous Failure Recovery
 
 * Detects drone crashes, communication loss, and node dropouts in real time.
 * Executes Gap-Cover Reorganization to restore formation integrity.
 * Computes collision-free trajectories for surviving drones and maintains continuous coverage.
 
-### 🛡️ Adversarial Resilience
+###  Adversarial Resilience
 
 * Simulates GPS spoofing attacks, targeted node compromise, random attacks, and mechanical failures.
 * Evaluates system robustness under hostile and uncertain operating conditions.
 * Demonstrates reliable operation despite compromised drones and network disruptions.
 
-### 📊 Real-Time Visualization & Analytics
+###  Real-Time Visualization & Analytics
 
 * Provides live 3D swarm telemetry and recovery visualization.
 * Displays true, spoofed, and recovered drone positions for performance evaluation.
@@ -51,7 +51,7 @@ The framework enables drones to collaboratively identify malicious nodes, recove
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 The SwarmRaft framework consists of three interconnected layers:
 
@@ -74,7 +74,7 @@ The SwarmRaft framework consists of three interconnected layers:
 
 ---
 
-## 📈 Results
+##  Results
 
 ### GPS Spoofing Recovery
 
@@ -90,7 +90,7 @@ The Reinforcement Learning agent learns optimal drone arrangements that consiste
 
 ---
 
-## 🚀 Technologies Used
+##  Technologies Used
 
 **The system is designed to handle up to **$f$** Byzantine faults in a swarm of size **$n$**, provided that $n \ge 2f + 1$**. **By offloading the math-heavy verification to C, the leader node can process 17+ drones with sub-millisecond latency**.
 
