@@ -8,11 +8,7 @@ Write-Host "====================================================================
 
 # Detect Python Environment with Fallbacks
 $PythonBin = "python"
-if (Test-Path "..\..\Swarm-Raft-main\.venv\Scripts\python.exe") {
-    $PythonBin = "..\..\Swarm-Raft-main\.venv\Scripts\python.exe"
-} elseif (Test-Path "C:\Users\sangh\Downloads\Swarm-Raft-main\.venv\Scripts\python.exe") {
-    $PythonBin = "C:\Users\sangh\Downloads\Swarm-Raft-main\.venv\Scripts\python.exe"
-} elseif (Test-Path ".venv\Scripts\python.exe") {
+if (Test-Path ".venv\Scripts\python.exe") {
     $PythonBin = ".venv\Scripts\python.exe"
 }
 

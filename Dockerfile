@@ -6,10 +6,14 @@ WORKDIR /app
 COPY requirements-web.txt .
 RUN pip install --no-cache-dir -r requirements-web.txt
 
-# Copy python_layer since headless_sim imports fault_injector from there
+# Copy the C++ native engine (pre-compiled Linux .so or Windows DLL)
+# Note: the .dll is Windows-only; on Linux, swarmraft_native.py falls back to pure Python.
+COPY cpp_mesh/ ./cpp_mesh/
+
+# Copy python_layer (swarmraft_native.py, consensus.py, trajectory.py, fault_injector.py, RL model)
 COPY python_layer/ ./python_layer/
 
-# Copy the web application files
+# Copy the web application
 COPY web_app/ ./web_app/
 
 # Expose port

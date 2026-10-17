@@ -7,11 +7,7 @@ echo =====================================================================
 
 REM Detect Python Environment with Fallbacks
 set PYTHON_BIN=python
-if exist "..\..\Swarm-Raft-main\.venv\Scripts\python.exe" (
-    set PYTHON_BIN=..\..\Swarm-Raft-main\.venv\Scripts\python.exe
-) else if exist "C:\Users\sangh\Downloads\Swarm-Raft-main\.venv\Scripts\python.exe" (
-    set PYTHON_BIN=C:\Users\sangh\Downloads\Swarm-Raft-main\.venv\Scripts\python.exe
-) else if exist ".venv\Scripts\python.exe" (
+if exist ".venv\Scripts\python.exe" (
     set PYTHON_BIN=.venv\Scripts\python.exe
 )
 

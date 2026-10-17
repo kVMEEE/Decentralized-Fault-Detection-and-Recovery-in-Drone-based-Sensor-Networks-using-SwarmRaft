@@ -2,8 +2,12 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C++ build artifacts (platform-specific binaries; compile from source)
 *.o
 *.obj
+*.exp
+*.lib
 
 # Virtual Environments
 venv/
@@ -20,3 +24,6 @@ Thumbs.db
 # Simulation scratch builds
 simulation/
 core/build
+
+# Logs and debug output
+*.log
