@@ -1,4 +1,22 @@
-# Ignore virtual environment folder
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.o
+*.obj
+
+# Virtual Environments
 venv/
+.venv/
+env/
+ENV/
+
+# Temporary / OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Simulation scratch builds
 simulation/
 core/build

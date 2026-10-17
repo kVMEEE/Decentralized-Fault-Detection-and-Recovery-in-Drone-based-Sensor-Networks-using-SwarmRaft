@@ -1,5 +1,8 @@
-# Core AI and Math Dependencies for Distributed Agents Master Prompt
+# Core AI, Simulation, and Web Dependencies for SwarmRaft
 matplotlib
 numpy
 gymnasium
 stable-baselines3
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+websockets>=12.0

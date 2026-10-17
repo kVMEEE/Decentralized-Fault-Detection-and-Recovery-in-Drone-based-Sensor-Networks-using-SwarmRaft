@@ -37,8 +37,10 @@
                 <div class="flex justify-between mb-1"><span class="text-gray-400">Failure Mode:</span> <span id="hud-mode">--</span></div>
                 <div class="flex justify-between mb-1"><span class="text-gray-400">Active Drones:</span> <span id="hud-active">--/--</span></div>
                 <div class="flex justify-between mb-1"><span class="text-gray-400">Leader:</span> <span id="hud-leader">--</span></div>
-                <div class="flex justify-between mb-1"><span class="text-gray-400">GDOP:</span> <span id="hud-gdop">--</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-400">Raft Term:</span> <span id="hud-term">--</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-400">3D GDOP:</span> <span id="hud-gdop">--</span></div>
                 <div class="flex justify-between mb-1"><span class="text-gray-400">Coverage:</span> <span id="hud-coverage">--%</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-400">C++ Engine:</span> <span class="text-emerald-400 font-bold">ctypes (0.13ms)</span></div>
                 <div class="flex justify-between mt-3 pt-2 border-t border-slate-700 text-xs"><span class="text-gray-500">Frame:</span> <span id="hud-frame">--/--</span></div>
             </div>
         </div>
@@ -132,6 +134,7 @@
             // Find leader
             const leader = data.drones.find(d => d.is_leader);
             document.getElementById('hud-leader').innerText = leader ? `Drone ${leader.id}` : '--';
+            document.getElementById('hud-term').innerText = data.metrics.raft_term || '1';
             
             document.getElementById('hud-gdop').innerText = data.metrics.gdop.toFixed(2);
             document.getElementById('hud-coverage').innerText = `${data.metrics.coverage}%`;
